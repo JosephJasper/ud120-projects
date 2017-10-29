@@ -17,14 +17,14 @@ bumpy_slow = [features_train[ii][1] for ii in range(0, len(features_train)) if l
 
 
 #### initial visualization
-plt.xlim(0.0, 1.0)
-plt.ylim(0.0, 1.0)
-plt.scatter(bumpy_fast, grade_fast, color = "b", label="fast")
-plt.scatter(grade_slow, bumpy_slow, color = "r", label="slow")
-plt.legend()
-plt.xlabel("bumpiness")
-plt.ylabel("grade")
-plt.show()
+#plt.xlim(0.0, 1.0)
+#plt.ylim(0.0, 1.0)
+#plt.scatter(bumpy_fast, grade_fast, color = "b", label="fast")
+#plt.scatter(grade_slow, bumpy_slow, color = "r", label="slow")
+#plt.legend()
+#plt.xlabel("bumpiness")
+#plt.ylabel("grade")
+#plt.show()
 ################################################################################
 
 
@@ -36,7 +36,8 @@ from sklearn.metrics import accuracy_score
 from time import time
 
 def classify(features_train,labels_train):
-	clf = AdaBoostClassifier()
+	#clf = AdaBoostClassifier(n_estimators = 25)
+	clf = KNeighborsClassifier(n_neighbors = 2, weights="distance")
 	clf.fit(features_train,labels_train)
 	return clf
 
