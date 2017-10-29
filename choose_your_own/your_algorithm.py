@@ -30,11 +30,24 @@ plt.show()
 
 ### your code here!  name your classifier object clf if you want the 
 ### visualization code (prettyPicture) to show you the decision boundary
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.ensemble import AdaBoostClassifier
+from sklearn.metrics import accuracy_score
+from time import time
 
+def classify(features_train,labels_train):
+	clf = AdaBoostClassifier()
+	clf.fit(features_train,labels_train)
+	return clf
 
-
-
-
+t0 = time()
+clf = classify(features_train,labels_train)
+print "Training time:", round(time()-t0,3), "s"
+t1 = time()
+pred = clf.predict(features_test)
+print "Predicting time:", round(time()-t1,3), "s"
+accuracy = accuracy_score(labels_test,pred)
+print accuracy
 
 
 
