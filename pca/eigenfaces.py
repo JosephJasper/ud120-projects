@@ -136,11 +136,15 @@ def title(y_pred, y_test, target_names, i):
 prediction_titles = [title(y_pred, y_test, target_names, i)
                          for i in range(y_pred.shape[0])]
 
-plot_gallery(X_test, prediction_titles, h, w)
+if n_components >= 12:
+  plot_gallery(X_test, prediction_titles, h, w)
 
 # plot the gallery of the most significative eigenfaces
 
 eigenface_titles = ["eigenface %d" % i for i in range(eigenfaces.shape[0])]
-plot_gallery(eigenfaces, eigenface_titles, h, w)
+if n_components >= 12:
+  plot_gallery(eigenfaces, eigenface_titles, h, w)
 
 pl.show()
+
+#print(pca.explained_variance_ratio_)
