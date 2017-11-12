@@ -38,6 +38,44 @@ labels_train   = labels_train[:150]
 
 
 ### your code goes here
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import accuracy_score
 
+clf = DecisionTreeClassifier()
+clf.fit(features_train,labels_train)
+predictions = clf.predict(features_test)
+accuracy = accuracy_score(labels_test,predictions)
+print "Accuracy of tree is", round(accuracy,2)
 
+#for a in clf.feature_importances_:
+#	print a
+
+max_feature = max(clf.feature_importances_)
+feature_length = len(clf.feature_importances_)
+strongest_feature = 0
+#for a in range(0,feature_length):
+#	if clf.feature_importances_[a] == max_feature:
+#		strongest_feature = a
+#		print "Importance of most important feature:",round(max_feature,3)
+#		print "Feature is ",strongest_feature,"th feature."
+
+features = vectorizer.get_feature_names()
+#print features[strongest_feature]
+
+feature_threshold = .2
+potential_signatures = []
+for a in range(0,feature_length):
+	line = []
+	if clf.feature_importances_[a] > feature_threshold:
+		line.append(a)
+		line.append(clf.feature_importances_[a])
+		line.append(features[a])
+		potential_signatures.append(line)
+
+if len(potential_signatures) > 0:
+	print "The following should be evaluated for being a signature:"
+	for a in potential_signatures:
+		print a
+else:
+	print "No likely signatures found."
 

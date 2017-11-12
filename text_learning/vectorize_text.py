@@ -38,7 +38,7 @@ temp_counter = 0
 
 
 for name, from_person in [("sara", from_sara), ("chris", from_chris)]:
-    stop_words_list = ["sara", "shackleton", "chris", "germani"]
+    stop_words_list = ["sara", "shackleton", "chris", "germani","sshacklensf","cgermannsf"]
     for path in from_person:
         ### only look at first 200 emails when developing
         ### once everything is working, remove this line to run over full dataset
