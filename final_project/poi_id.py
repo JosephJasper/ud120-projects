@@ -10,7 +10,11 @@ from tester import dump_classifier_and_data
 ### Task 1: Select what features you'll use.
 ### features_list is a list of strings, each of which is a feature name.
 ### The first feature must be "poi".
-features_list = ['poi','salary'] # You will need to use more features
+features_list = ['poi','salary','bonus',\
+#'expenses','restricted_stock',\
+#'total_stock_value','total_payments',\
+'from_poi_rate','to_poi_rate'] 
+# You will need to use more features
 
 ### Load the dictionary containing the dataset
 with open("final_project_dataset.pkl", "r") as data_file:
@@ -23,7 +27,22 @@ pre_dataset = data_dict
 pre_dataset.pop('TOTAL')
 
 #Examine the structure of the data and the ranges of the various features.
-'''
+for a in pre_dataset:
+	if pre_dataset[a]["to_messages"] == "NaN":
+		pre_dataset[a]["to_poi_rate"] = 0.
+	if pre_dataset[a]["to_messages"] != "NaN":
+		pre_dataset[a]["to_poi_rate"] = \
+		(1. * pre_dataset[a]['from_this_person_to_poi']) / \
+		(1. * pre_dataset[a]['to_messages'])
+	if pre_dataset[a]['from_messages'] == "NaN":
+		pre_dataset[a]["from_poi_rate"] = 0.
+	if pre_dataset[a]['from_messages'] != "NaN":
+		pre_dataset[a]["from_poi_rate"] = \
+		(1. * pre_dataset[a]['from_poi_to_this_person']) / \
+		(1. * pre_dataset[a]['from_messages'])
+
+
+
 namelist = []
 featurelist = {}
 for a in pre_dataset:
@@ -46,68 +65,6 @@ for a in featurelist:
 	", Minimum Value:",min(featurelist[a]["Values"]),",Maximum Value:",\
 	max(featurelist[a]["Values"]), featurelist[a]
 
-'''
-#Identify key financial measures, scale and then use PCA to find 1 measure
-'''
-from sklearn.preprocessing import MinMaxScaler
-from sklearn.decomposition import PCA
-'''
-#Originally tried to leverage all financial features in hopes that each 
-#component could help inform a PCA
-#financial_PCA_features = ["salary","bonus","long_term_incentive","deferred_income",\
-#"deferral_payments","other","expenses","director_fees",\
-#"exercised_stock_options","restricted_stock","restricted_stock_deferred"]
-
-#Utilized summary features instead
-'''
-financial_PCA_features = ["total_payments","total_stock_value"]
-
-financial_PCA_Data = []
-for a in pre_dataset:
-	row_data = []
-	for b in financial_PCA_features:
-		if pre_dataset[a][b] == "NaN":
-			row_data.append(0)
-		else:
-			row_data.append(pre_dataset[a][b])
-	financial_PCA_Data.append(row_data)
-
-financial_Scaler = MinMaxScaler()
-print financial_PCA_Data
-financial_PCA_Data = financial_Scaler.fit_transform(financial_PCA_Data)
-print financial_PCA_Data
-financial_PCA = PCA(n_components = 1)
-financial_PCA_Data = financial_PCA.fit_transform(financial_PCA_Data)
-print financial_PCA_Data
-print len(financial_PCA_Data)
-
-print financial_PCA.explained_variance_ratio_
-'''
-#for a in pre_dataset:
-#	if 'total_payments' not in pre_dataset[a] or \
-#	pre_dataset[a]['total_payments'] == "NaN":
-#		pre_dataset[a]['total_payments'] = 0
-#	if 'total_stock_value' not in pre_dataset[a] or \
-#	pre_dataset[a]['total_stock_value'] == "NaN":
-#		pre_dataset[a]['total_stock_value'] = 0
-#	pre_dataset[a]['total_compensation'] = pre_dataset[a]['total_payments'] + \
-#	pre_dataset[a]['total_stock_value']
-#	if pre_dataset[a]['total_compensation'] != 0:
-#		pre_dataset[a]['stock_compensation_rate'] = \
-#	(pre_dataset[a]['total_stock_value'] * 1.) / \
-#	(pre_dataset[a]['total_compensation'] * 1.)
-#
-#for a in pre_dataset:
-#	if pre_dataset[a]['to_messages'] != "NaN" and \
-#	pre_dataset[a]['from_messages'] != "NaN":
-#		pre_dataset[a]['poi_email_rate'] = (1. * \
-#		(pre_dataset[a]['from_poi_to_this_person'] + \
-#		(pre_dataset[a]['from_this_person_to_poi']))) / \
-#		(1. * (pre_dataset[a]['from_messages'] + \
-#		(pre_dataset[a]['to_messages'])))
-
-
-
 my_dataset = data_dict
 
 ### Extract features and labels from dataset for local testing
@@ -122,8 +79,35 @@ labels, features = targetFeatureSplit(data)
 
 # Provided to give you a starting point. Try a variety of classifiers.
 from sklearn.naive_bayes import GaussianNB
-clf = GaussianNB()
+from sklearn.svm import SVC
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.decomposition import PCA
+from sklearn.pipeline import Pipeline
+from sklearn.model_selection import GridSearchCV
+#http://scikit-learn.org/stable/modules/generated/sklearn.metrics.make_scorer.html
+from sklearn.metrics import precision_score, recall_score, make_scorer
 
+classifier = KNeighborsClassifier(weights = "distance")
+
+minmax = MinMaxScaler(copy = False)
+
+#pca = PCA()
+
+pipeline = Pipeline([('minmax',minmax),('classifier',classifier)])
+
+parameters = {"classifier__n_neighbors":(5,5),\
+"classifier__algorithm":['ball_tree','kd_tree','brute']}
+
+
+
+#http://scikit-learn.org/stable/modules/model_evaluation.html#scoring-parameter
+#3.3.1.4. Using multiple metric evaluation
+
+precision = make_scorer(precision_score)
+recall = make_scorer(recall_score)
+
+clf = GridSearchCV(pipeline, parameters, scoring = recall)
 ### Task 5: Tune your classifier to achieve better than .3 precision and recall 
 ### using our testing script. Check the tester.py script in the final project
 ### folder for details on the evaluation method, especially the test_classifier
@@ -154,11 +138,10 @@ for train_index, test_index in sss.split(features, labels):
 		features_test.append( features[jj] )
 		labels_test.append( labels[jj] )
 
-clf = clf.fit(features_train,labels_train)
+clf.fit(features_train,labels_train)
 pred = clf.predict(features_test)
 
-
-
+print clf.best_estimator_
 
 #Why not use the tester provided to test
 from tester import test_classifier
@@ -173,12 +156,9 @@ test_classifier(clf, my_dataset, features_list)
 ### that the version of poi_id.py that you submit can be run on its own and
 ### generates the necessary .pkl files for validating your results.
 
-
-
 dump_classifier_and_data(clf, my_dataset, features_list)
-
-
 
 #Forum help
 #https://discussions.udacity.com/t/invalid-parameter-c-for-estimator-pipeline/42100/2
 #https://discussions.udacity.com/t/what-is-pipeline/185160/3
+#https://discussions.udacity.com/t/selectkbest-and-adding-removing-features/162469/4
