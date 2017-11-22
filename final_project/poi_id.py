@@ -10,11 +10,36 @@ from tester import dump_classifier_and_data
 ### Task 1: Select what features you'll use.
 ### features_list is a list of strings, each of which is a feature name.
 ### The first feature must be "poi".
-features_list = ['poi','salary','bonus',\
-#'expenses','restricted_stock',\
-#'total_stock_value','total_payments',\
+features_list = ['poi',\
+#"to_messages",\
+#Likely not a useful feature in it's own right
+##"deferral_payments",\
+##"expenses",\
+##"deferred_income",\
+#"email_address",\
+#Email address is too direct to POI's
+#"from_poi_to_this_person",\
+#Captured in from 
+##"restricted_stock_deferred",\
+##"shared_receipt_with_poi",\
+#"loan_advances",\
+#Only 3 uses and only POI's received
+#"from_messages",\
+#Likely not a useful feature in it's own right
+##"other",\
+##"director_fees",\
+"bonus",\
+##"total_stock_value",\
+#"from_this_person_to_poi",\
+##"long_term_incentive",\
+##"restricted_stock",\
+"salary",\
+##"total_payments",\
+##"exercised_stock_options",\
 'from_poi_rate','to_poi_rate'] 
 # You will need to use more features
+
+
 
 ### Load the dictionary containing the dataset
 with open("final_project_dataset.pkl", "r") as data_file:
@@ -28,18 +53,18 @@ pre_dataset.pop('TOTAL')
 
 #Examine the structure of the data and the ranges of the various features.
 for a in pre_dataset:
-	if pre_dataset[a]["to_messages"] == "NaN":
+	if pre_dataset[a]["from_messages"] == "NaN":
 		pre_dataset[a]["to_poi_rate"] = 0.
-	if pre_dataset[a]["to_messages"] != "NaN":
+	if pre_dataset[a]["from_messages"] != "NaN":
 		pre_dataset[a]["to_poi_rate"] = \
 		(1. * pre_dataset[a]['from_this_person_to_poi']) / \
-		(1. * pre_dataset[a]['to_messages'])
-	if pre_dataset[a]['from_messages'] == "NaN":
+		(1. * pre_dataset[a]['from_messages'])
+	if pre_dataset[a]['to_messages'] == "NaN":
 		pre_dataset[a]["from_poi_rate"] = 0.
-	if pre_dataset[a]['from_messages'] != "NaN":
+	if pre_dataset[a]['to_messages'] != "NaN":
 		pre_dataset[a]["from_poi_rate"] = \
 		(1. * pre_dataset[a]['from_poi_to_this_person']) / \
-		(1. * pre_dataset[a]['from_messages'])
+		(1. * pre_dataset[a]['to_messages'])
 
 
 
@@ -60,10 +85,13 @@ for a in pre_dataset:
 					featurelist[b]["Values"].append(pre_dataset[a][b])
 
 print "Features"
+#for a in featurelist:
+#	print a,", Unique Values: " ,len(featurelist[a]["Values"]),\
+#	", Minimum Value:",min(featurelist[a]["Values"]),",Maximum Value:",\
+#	max(featurelist[a]["Values"]), featurelist[a]
+
 for a in featurelist:
-	print a,", Unique Values: " ,len(featurelist[a]["Values"]),\
-	", Minimum Value:",min(featurelist[a]["Values"]),",Maximum Value:",\
-	max(featurelist[a]["Values"]), featurelist[a]
+	print a
 
 my_dataset = data_dict
 
@@ -107,7 +135,7 @@ parameters = {"classifier__n_neighbors":(5,5),\
 precision = make_scorer(precision_score)
 recall = make_scorer(recall_score)
 
-clf = GridSearchCV(pipeline, parameters, scoring = recall)
+clf = GridSearchCV(pipeline, parameters, scoring = precision)
 ### Task 5: Tune your classifier to achieve better than .3 precision and recall 
 ### using our testing script. Check the tester.py script in the final project
 ### folder for details on the evaluation method, especially the test_classifier
