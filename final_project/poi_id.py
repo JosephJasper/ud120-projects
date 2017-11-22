@@ -10,34 +10,37 @@ from tester import dump_classifier_and_data
 ### Task 1: Select what features you'll use.
 ### features_list is a list of strings, each of which is a feature name.
 ### The first feature must be "poi".
-features_list = ['poi',\
+features_list = [\
+'poi',\
 #"to_messages",\
 #Likely not a useful feature in it's own right
+"bonus",\
 "deferral_payments",\
-"expenses",\
 "deferred_income",\
+"director_fees",\
+"exercised_stock_options",\
+"expenses",\
+'from_poi_rate',\
+"long_term_incentive",\
+"other",\
+"restricted_stock",\
+"restricted_stock_deferred",\
+"salary",\
+"shared_receipt_with_poi",\
+"total_payments",\
+'to_poi_rate',\
+"total_stock_value"\
 #"email_address",\
 #Email address is too direct to POI's
 #"from_poi_to_this_person",\
 #May skew effectiveness in from_poi_rate
-"restricted_stock_deferred",\
-"shared_receipt_with_poi",\
 #"loan_advances",\
 #Only 3 uses and only POI's received
 #"from_messages",\
 #Likely not a useful feature in it's own right
-"other",\
-"director_fees",\
-"bonus",\
-"total_stock_value",\
 #"from_this_person_to_poi",\
 #May skew effectiveness in to_poi_rate
-"long_term_incentive",\
-"restricted_stock",\
-"salary",\
-"total_payments",\
-"exercised_stock_options",\
-'from_poi_rate','to_poi_rate'] 
+] 
 # You will need to use more features
 
 
@@ -85,11 +88,12 @@ for a in pre_dataset:
 				if pre_dataset[a][b] not in featurelist[b]["Values"]:
 					featurelist[b]["Values"].append(pre_dataset[a][b])
 
-print "Features"
-#for a in featurelist:
-#	print a,", Unique Values: " ,len(featurelist[a]["Values"]),\
-#	", Minimum Value:",min(featurelist[a]["Values"]),",Maximum Value:",\
-#	max(featurelist[a]["Values"]), featurelist[a]
+print "Features available:"
+for a in featurelist:
+	print a,", Unique Values: " ,len(featurelist[a]["Values"]),\
+	", Minimum Value:",min(featurelist[a]["Values"]),",Maximum Value:",\
+	max(featurelist[a]["Values"]), featurelist[a]
+print "\n"
 
 my_dataset = data_dict
 
@@ -111,10 +115,10 @@ from sklearn.feature_selection import SelectKBest
 #from sklearn.preprocessing import MinMaxScaler
 #from sklearn.decomposition import PCA
 from sklearn.pipeline import Pipeline
-from sklearn.model_selection import GridSearchCV
+#from sklearn.model_selection import GridSearchCV
 #http://scikit-learn.org/stable/modules/
 #generated/sklearn.metrics.make_scorer.html
-#from sklearn.metrics import precision_score, recall_score, make_scorer
+from sklearn.metrics import precision_score, recall_score, f1_score, make_scorer
 
 feature_select = SelectKBest(k = 5)
 
@@ -143,7 +147,7 @@ classifier_parameters = {\
 }
 '''
 
-pipeline = Pipeline([\
+clf = Pipeline([\
 #	('minmax',minmax),\
 	('feature_select',feature_select),\
 	('classifier',classifier)])
@@ -165,7 +169,7 @@ if len(classifier_parameters) > 0:
 #recall = make_scorer(recall_score)
 
 #clf = GridSearchCV(pipeline, parameters, scoring = 'f1')
-clf = pipeline
+
 
 ### Task 5: Tune your classifier to achieve better than .3 precision and recall 
 ### using our testing script. Check the tester.py script in the final project
@@ -180,10 +184,13 @@ clf = pipeline
 #features_train, features_test, labels_train, labels_test = \
 #    train_test_split(features, labels, test_size=0.3, random_state=42)
 
-from sklearn.model_selection import StratifiedShuffleSplit
-sss = StratifiedShuffleSplit(n_splits=100, test_size=.3,random_state=42)
+from sklearn.cross_validation import StratifiedShuffleSplit
+sss = StratifiedShuffleSplit(labels, 1000, test_size=.20,random_state=42)
 
-for train_index, test_index in sss.split(features, labels):
+predictions = []
+labels_tests = []
+
+for train_index, test_index in sss:
 	features_train = []
 	features_test  = []
 	labels_train   = []
@@ -194,17 +201,32 @@ for train_index, test_index in sss.split(features, labels):
 	for jj in test_index:
 		features_test.append( features[jj] )
 		labels_test.append( labels[jj] )
+	clf.fit(features_train,labels_train)
+	pred = clf.predict(features_test)
+	labels_tests.extend(labels_test) 
+	predictions.extend(pred)
 
-clf.fit(features_train,labels_train)
-pred = clf.predict(features_test)
+#https://stackoverflow.com/questions/39839112/
+#the-easiest-way-for-getting-feature-names-after-running-selectkbest-in-scikit-
+#le
+selected_feature_values = feature_select.get_support(indices = True)
+print "Features selected:"
+for a in selected_feature_values:
+	print features_list[a+1]
+print '\n'
+
+print "Total POI's:",sum(labels)
+print "Total dataset:",len(labels)
+print '\n'
+
+print "F1:",f1_score(labels_test,pred)
+print "Precision:", precision_score(labels_tests,predictions)
+print "Recall:", recall_score(labels_tests,predictions)
 
 #Why not use the tester provided to test
-from tester import test_classifier
+#from tester import test_classifier
 
-test_classifier(clf, my_dataset, features_list)
-
-#from sklearn.metrics import f1_score
-#print f1_score(labels_test,pred)
+#test_classifier(clf, my_dataset, features_list)
 
 ### Task 6: Dump your classifier, dataset, and features_list so anyone can
 ### check your results. You do not need to change anything below, but make sure
