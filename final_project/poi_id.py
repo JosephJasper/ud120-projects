@@ -13,29 +13,30 @@ from tester import dump_classifier_and_data
 features_list = ['poi',\
 #"to_messages",\
 #Likely not a useful feature in it's own right
-##"deferral_payments",\
-##"expenses",\
-##"deferred_income",\
+"deferral_payments",\
+"expenses",\
+"deferred_income",\
 #"email_address",\
 #Email address is too direct to POI's
 #"from_poi_to_this_person",\
-#Captured in from 
-##"restricted_stock_deferred",\
-##"shared_receipt_with_poi",\
+#May skew effectiveness in from_poi_rate
+"restricted_stock_deferred",\
+"shared_receipt_with_poi",\
 #"loan_advances",\
 #Only 3 uses and only POI's received
 #"from_messages",\
 #Likely not a useful feature in it's own right
-##"other",\
-##"director_fees",\
+"other",\
+"director_fees",\
 "bonus",\
-##"total_stock_value",\
+"total_stock_value",\
 #"from_this_person_to_poi",\
-##"long_term_incentive",\
-##"restricted_stock",\
+#May skew effectiveness in to_poi_rate
+"long_term_incentive",\
+"restricted_stock",\
 "salary",\
-##"total_payments",\
-##"exercised_stock_options",\
+"total_payments",\
+"exercised_stock_options",\
 'from_poi_rate','to_poi_rate'] 
 # You will need to use more features
 
@@ -90,9 +91,6 @@ print "Features"
 #	", Minimum Value:",min(featurelist[a]["Values"]),",Maximum Value:",\
 #	max(featurelist[a]["Values"]), featurelist[a]
 
-for a in featurelist:
-	print a
-
 my_dataset = data_dict
 
 ### Extract features and labels from dataset for local testing
@@ -107,41 +105,75 @@ labels, features = targetFeatureSplit(data)
 
 # Provided to give you a starting point. Try a variety of classifiers.
 from sklearn.naive_bayes import GaussianNB
-from sklearn.svm import SVC
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.preprocessing import MinMaxScaler
-from sklearn.decomposition import PCA
+#from sklearn.svm import SVC
+#from sklearn.neighbors import KNeighborsClassifier
+from sklearn.feature_selection import SelectKBest
+#from sklearn.preprocessing import MinMaxScaler
+#from sklearn.decomposition import PCA
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import GridSearchCV
-#http://scikit-learn.org/stable/modules/generated/sklearn.metrics.make_scorer.html
-from sklearn.metrics import precision_score, recall_score, make_scorer
+#http://scikit-learn.org/stable/modules/
+#generated/sklearn.metrics.make_scorer.html
+#from sklearn.metrics import precision_score, recall_score, make_scorer
 
-classifier = KNeighborsClassifier(weights = "distance")
+feature_select = SelectKBest(k = 5)
 
-minmax = MinMaxScaler(copy = False)
-
-#pca = PCA()
-
-pipeline = Pipeline([('minmax',minmax),('classifier',classifier)])
-
-parameters = {"classifier__n_neighbors":(5,5),\
-"classifier__algorithm":['ball_tree','kd_tree','brute']}
+#minmax = MinMaxScaler(copy = False)
 
 
+###Quote and unquote sections based on which classifier used in the end.
+'''
+classifier = KNeighborsClassifier()
+classifier_parameters = {\
+"classifier__weights":["uniform","distance"],\
+#"classifier__algorithm":['auto','ball_tree','kd_tree','brute'],\
+#"classifier__leaf_size":[5,15,30],\
+"classifier__n_neighbors":(3,5)\
+}
+'''
 
-#http://scikit-learn.org/stable/modules/model_evaluation.html#scoring-parameter
+classifier = GaussianNB()
+classifier_parameters = {}
+
+'''
+classifier = SVC(random_state = 42)
+classifier_parameters = {\
+"classifier__C":[1,5,25],\
+"classifier__kernel":["linear","rbf","poly"]\
+}
+'''
+
+pipeline = Pipeline([\
+#	('minmax',minmax),\
+	('feature_select',feature_select),\
+	('classifier',classifier)])
+
+'''
+parameters = {\
+"feature_select__k": (3,5,7)}
+
+if len(classifier_parameters) > 0:
+	for a in classifier_parameters:
+		parameters[a] = classifier_parameters[a]
+'''
+
+#http://scikit-learn.org/stable/modules/
+#model_evaluation.html#scoring-parameter
 #3.3.1.4. Using multiple metric evaluation
 
-precision = make_scorer(precision_score)
-recall = make_scorer(recall_score)
+#precision = make_scorer(precision_score)
+#recall = make_scorer(recall_score)
 
-clf = GridSearchCV(pipeline, parameters, scoring = precision)
+#clf = GridSearchCV(pipeline, parameters, scoring = 'f1')
+clf = pipeline
+
 ### Task 5: Tune your classifier to achieve better than .3 precision and recall 
 ### using our testing script. Check the tester.py script in the final project
 ### folder for details on the evaluation method, especially the test_classifier
 ### function. Because of the small size of the dataset, the script uses
 ### stratified shuffle split cross validation. For more info: 
-### http://scikit-learn.org/stable/modules/generated/sklearn.cross_validation.StratifiedShuffleSplit.html
+### http://scikit-learn.org/stable/modules/generated/
+###sklearn.cross_validation.StratifiedShuffleSplit.html
 
 # Example starting point. Try investigating other evaluation techniques!
 #from sklearn.cross_validation import train_test_split
@@ -151,10 +183,7 @@ clf = GridSearchCV(pipeline, parameters, scoring = precision)
 from sklearn.model_selection import StratifiedShuffleSplit
 sss = StratifiedShuffleSplit(n_splits=100, test_size=.3,random_state=42)
 
-
 for train_index, test_index in sss.split(features, labels):
-#	features_train, features_test = features(train_index), features(test_index)
-#	labels_train, labels_test = labels(train_index), labels(test_index)
 	features_train = []
 	features_test  = []
 	labels_train   = []
@@ -168,8 +197,6 @@ for train_index, test_index in sss.split(features, labels):
 
 clf.fit(features_train,labels_train)
 pred = clf.predict(features_test)
-
-print clf.best_estimator_
 
 #Why not use the tester provided to test
 from tester import test_classifier
