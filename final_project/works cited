@@ -27,3 +27,12 @@ http://peekaboo-vision.blogspot.de/2013/01/machine-learning-cheat-sheet-for-scik
 https://docs.python.org/3/library/array.html#array.array.extend
 https://stackoverflow.com/questions/39839112/the-easiest-way-for-getting-feature-names-after-running-selectkbest-in-scikit-le
 https://stackoverflow.com/questions/35229029/in-selectkbest-what-does-length-of-get-support-represent
+https://pandas.pydata.org/pandas-docs/stable/generated/pandas.DataFrame.from_dict.html
+https://pandas.pydata.org/pandas-docs/stable/generated/pandas.DataFrame.to_dict.html
+http://pandas.pydata.org/pandas-docs/version/0.17.0/generated/pandas.Index.drop.html
+http://pandas.pydata.org/pandas-docs/stable/indexing.html#indexing-view-versus-copy
+https://stackoverflow.com/questions/30101369/how-can-i-print-out-just-the-index-of-a-pandas-dataframe
+https://stackoverflow.com/questions/27129152/pandas-column-names-to-list
+https://stackoverflow.com/questions/22391433/count-the-frequency-that-a-value-occurs-in-a-dataframe-column
+https://stackoverflow.com/questions/31569384/set-value-for-particular-cell-in-pandas-dataframe-with-iloc?noredirect=1&lq=1
+https://stackoverflow.com/questions/17322208/multiple-try-codes-in-one-block
